@@ -27,11 +27,6 @@
         android:layout_height="wrap_content"
         android:text="Change Page"/>
 
-    <Button
-        android:id="@+id/loadMoreBtn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Load More"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"

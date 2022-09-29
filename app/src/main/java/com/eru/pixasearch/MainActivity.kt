@@ -3,24 +3,40 @@ package com.eru.pixasearch
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.eru.pixasearch.databinding.ActivityMainBinding
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
 class MainActivity : AppCompatActivity() {
-    var imageAdapter = ImageAdapter(mutableListOf())
+    var imageAdapter = ImageAdapter(arrayListOf())
     private var page = 1
-    lateinit var binding: ActivityMainBinding
-    private var list = listOf<ImageModel>()
+    private lateinit var binding: ActivityMainBinding
     private var perPage = 10
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         initClicker()
+
+        binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener(){
+
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                val linearLayoutManager = recyclerView.layoutManager as LinearLayoutManager
+                if (linearLayoutManager.findLastVisibleItemPosition() == linearLayoutManager.itemCount - 1
+                    && !recyclerView.canScrollVertically(1)){
+                    page++
+                    doRequest()
+                }
+            }
+        })
     }
+
 
     private fun initClicker() {
         with(binding){
@@ -32,23 +48,18 @@ class MainActivity : AppCompatActivity() {
             requestBtn.setOnClickListener {
                 doRequest()
             }
-
-            loadMoreBtn.setOnClickListener {
-                perPage += 10
-                doRequest()
-            }
         }
     }
 
-    private fun ActivityMainBinding.doRequest() {
-        App.api.getImages(keyWord = keyWordEt.text.toString(), page = page, perPage = perPage)
+    private fun doRequest() {
+        App.api.getImages(keyWord = binding.keyWordEt.text.toString(), page = page, perPage = perPage)
             .enqueue(object : Callback<PixaModel> {
                 override fun onResponse(call: Call<PixaModel>, response: Response<PixaModel>) {
                     if (response.isSuccessful) {
-                        list = response.body()?.hits!!
-                        imageAdapter = ImageAdapter(list)
+                        response.body()?.hits?.forEach {
+                            imageAdapter.addImage(it)
+                        }
                         binding.recyclerView.adapter = imageAdapter
-
                     }
                 }
 
